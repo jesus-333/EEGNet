@@ -71,7 +71,7 @@ class EEGNet(nn.Module):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # EEGNet config
 
-def config_EEGNet(C = 22, T = 512):
+def get_EEGNet_config(C = 22, T = 512):
     config = dict(
         # EEG Parameters
         C = C,
