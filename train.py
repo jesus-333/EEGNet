@@ -60,14 +60,18 @@ def train(model, loader_list, config):
     loss_function = nn.NLLLoss()
 
     for epoch in config['epochs']:
-        pass
+        train_loss = train_epoch(model, train_loader, config)
 
-def train_epoch(model, loader, config):
+def train_epoch(model, loader, loss_function, optimizer, config):
     model.train()
 
     for batch in loader:
         x = batch[0].to(config['device'])
-        y = batch[1].to(config['device'])
+        y_true = batch[1].to(config['device'])
+
+        y_predict = model(x)
+
+        train_loss = loss_function(y_true, y_predict)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%% Get function
