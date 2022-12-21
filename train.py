@@ -60,18 +60,61 @@ def train(model, loader_list, config):
     loss_function = nn.NLLLoss()
 
     for epoch in config['epochs']:
-        train_loss = train_epoch(model, train_loader, config)
+        # Train the model
+        train_loss = train_epoch(model, train_loader, loss_function, optimizer, config)
+        
+        # Validation
+        validation_loss = validation_epoch(model, train_loader, loss_function, optimizer, config)
+        
+        print_loss(epoch, train_loss, validation_loss)
+        
+
+        if lr_scheduler is not None: lr_scheduler.step()
 
 def train_epoch(model, loader, loss_function, optimizer, config):
     model.train()
-
+    
+    total_loss = 0
     for batch in loader:
         x = batch[0].to(config['device'])
         y_true = batch[1].to(config['device'])
-
+        
+        # Forward step
         y_predict = model(x)
-
+        
+        # Loss computation
         train_loss = loss_function(y_true, y_predict)
+        
+        # Zero past gradients
+        optimizer.zero_grad()
+
+        # Backward and optimization step
+        train_loss.backward()
+        optimizer.step()
+
+        total_loss += train_loss.item() * x.shape[0]
+
+    total_loss /= len(loader.sampler)
+    return total_loss
+
+def validation_epoch(model, loader, loss_function, optimizer, config):
+    model.eval()
+    
+    total_loss = 0
+    for batch in loader:
+        x = batch[0].to(config['device'])
+        y_true = batch[1].to(config['device'])
+        
+        # Forward step
+        y_predict = model(x)
+        
+        # Loss computation
+        validation_loss = loss_function(y_true, y_predict)
+        
+        total_loss += validation_loss.item() * x.shape[0]
+
+    total_loss /= len(loader.sampler)
+    return validation_loss
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%% Get function
@@ -102,6 +145,14 @@ def get_train_config():
     )
 
     return train_config
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#%% Visualization function
+
+def print_loss(epoch, train_loss, validation_loss):
+    print("Epoch:{}".format(epoch))
+    print("\tTrain Loss     : ", train_loss)
+    print("\tValidation Loss: ", validation_loss)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%%
