@@ -139,7 +139,7 @@ def convert_label(raw_labels):
         
 def split_dataset(full_dataset, percentage_split):
     """
-    Split a dataset in 2 
+    Split (randomly) a dataset in 2. The percentage of element in the two split is decided by the percentage_split parameter     
     """
 
     size_train = int(len(full_dataset) * percentage_split) 

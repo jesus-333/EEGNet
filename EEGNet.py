@@ -1,6 +1,8 @@
 """
-%load_ext autoreload
-%autoreload 2
+@author: Alberto Zancanaro (Jesus)
+@organization: University of Padua (Italy)
+
+Definition of EEGNet model using PyTorch
 """
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

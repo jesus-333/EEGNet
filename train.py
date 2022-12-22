@@ -1,3 +1,19 @@
+"""
+@author: Alberto Zancanaro (Jesus)
+@organization: University of Padua (Italy)
+
+Training script for EEGNet
+"""
+
+"""
+%load_ext autoreload
+%autoreload 2
+
+import moabb_dataset as md
+import train
+"""
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%% Imports
 
 import EEGNet
@@ -67,7 +83,6 @@ def train(model, loader_list, config):
         validation_loss = validation_epoch(model, train_loader, loss_function, optimizer, config)
         
         print_loss(epoch, train_loss, validation_loss)
-        
 
         if lr_scheduler is not None: lr_scheduler.step()
 
@@ -153,6 +168,9 @@ def print_loss(epoch, train_loss, validation_loss):
     print("Epoch:{}".format(epoch))
     print("\tTrain Loss     : ", train_loss)
     print("\tValidation Loss: ", validation_loss)
+
+def visualize_loss(fig, ax, train_loss, validation_loss):
+    pass
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%%
