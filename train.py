@@ -17,6 +17,9 @@ import train
 #%% Imports
 
 import EEGNet
+
+import numpy as np
+import matplotlib.pyplot as plt
 import moabb_dataset as md
 
 import torch
@@ -67,7 +70,7 @@ def train(model, loader_list, config):
                                   weight_decay = config['optimizer_weight_decay'])
 
     # lr scheduler
-    if config['use_scheduler'] == True:
+    if config['use_lr_scheduler'] == True:
         lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma = config['lr_decay_rate'])
     else:
         lr_scheduler = None
@@ -75,17 +78,31 @@ def train(model, loader_list, config):
     # Loss function
     loss_function = nn.NLLLoss()
 
-    for epoch in config['epochs']:
+    # Tracking variables
+    train_loss_list = []
+    validation_loss_list = []
+    fig, ax = plt.subplots(figsize = config['loss_figsize'])
+    plt.show()
+
+    for epoch in range(config['epochs']):
         # Train the model
         train_loss = train_epoch(model, train_loader, loss_function, optimizer, config)
         
         # Validation
-        validation_loss = validation_epoch(model, train_loader, loss_function, optimizer, config)
+        validation_loss = validation_epoch(model, validation_loader, loss_function, config)
         
-        print_loss(epoch, train_loss, validation_loss)
-
+        # Lr scheduler step
         if lr_scheduler is not None: lr_scheduler.step()
 
+        # Print loss
+        print_loss(epoch, train_loss, validation_loss)
+
+        # Save and visualize loss
+        train_loss_list.append(train_loss)
+        validation_loss_list.append(validation_loss)
+        visualize_loss(fig, ax, train_loss_list, validation_loss_list)
+
+        
 def train_epoch(model, loader, loss_function, optimizer, config):
     model.train()
     
@@ -98,7 +115,7 @@ def train_epoch(model, loader, loss_function, optimizer, config):
         y_predict = model(x)
         
         # Loss computation
-        train_loss = loss_function(y_true, y_predict)
+        train_loss = loss_function(y_predict, y_true)
         
         # Zero past gradients
         optimizer.zero_grad()
@@ -110,26 +127,29 @@ def train_epoch(model, loader, loss_function, optimizer, config):
         total_loss += train_loss.item() * x.shape[0]
 
     total_loss /= len(loader.sampler)
+    
     return total_loss
 
-def validation_epoch(model, loader, loss_function, optimizer, config):
+def validation_epoch(model, loader, loss_function, config):
     model.eval()
     
-    total_loss = 0
-    for batch in loader:
-        x = batch[0].to(config['device'])
-        y_true = batch[1].to(config['device'])
-        
-        # Forward step
-        y_predict = model(x)
-        
-        # Loss computation
-        validation_loss = loss_function(y_true, y_predict)
-        
-        total_loss += validation_loss.item() * x.shape[0]
+    with torch.no_grad():
+        total_loss = 0
+        for batch in loader:
+            x = batch[0].to(config['device'])
+            y_true = batch[1].to(config['device'])
+            
+            # Forward step
+            y_predict = model(x)
+            
+            # Loss computation
+            validation_loss = loss_function(y_predict, y_true)
+            
+            total_loss += validation_loss.item() * x.shape[0]
 
-    total_loss /= len(loader.sampler)
-    return validation_loss
+        total_loss /= len(loader.sampler)
+
+    return total_loss
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%% Get function
@@ -151,12 +171,13 @@ def get_model(C, T):
 def get_train_config():
     train_config = dict(
         batch_size = 32,
-        epochs = 500,
+        epochs = 100,
         lr = 1e-3,
         use_lr_scheduler = True,
         lr_decay_rate = 0.995,
         optimizer_weight_decay = 1e-3,
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"),
+        loss_figsize = (15, 10)
     )
 
     return train_config
@@ -167,13 +188,22 @@ def get_train_config():
 def print_loss(epoch, train_loss, validation_loss):
     print("Epoch:{}".format(epoch))
     print("\tTrain Loss     : ", train_loss)
-    print("\tValidation Loss: ", validation_loss)
+    print("\tValidation Loss: ", validation_loss, "\n")
 
 def visualize_loss(fig, ax, train_loss, validation_loss):
-    pass
+    x = np.arange(len(train_loss))
+
+    ax.plot(x, train_loss)
+    ax.plot(x, validation_loss)
+
+    ax.legend(["Train", "Validation"])
+
+    # fig.show()
+    # plt.draw()
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #%%
 
 if __name__ == "__main__":
-    pass
+    main()
