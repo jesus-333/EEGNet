@@ -17,6 +17,11 @@ from torch import nn
 class EEGNet(nn.Module):
     
     def __init__(self, config):
+        """
+        Implementation of EEGNet in PyTorch.
+        Read the GitHub page (https://github.com/jesus-333/EEGNet) to learn how to use this class
+        """
+
         super().__init__()
         
         use_bias = config['use_bias']
@@ -62,9 +67,17 @@ class EEGNet(nn.Module):
         )
 
     def forward(self, x):
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Block 1 (temporal + spatial filter)
         x = self.temporal_filter(x)
         x = self.spatial_filter(x)
+        
+        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Block 2 (separable convolution)
         x = self.separable_convolution(x)
+        
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Classification layer
         x = self.classifier(x)
 
         return x

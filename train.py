@@ -49,6 +49,7 @@ def main():
     # Create DataLoader
     train_loader = DataLoader(train_data, train_config['batch_size'])
     validation_loader = DataLoader(validation_data, train_config['batch_size'])
+    test_loader = DataLoader(test_data, train_config['batch_size'])
     loader_list = [train_loader, validation_loader]
 
     # Train model
